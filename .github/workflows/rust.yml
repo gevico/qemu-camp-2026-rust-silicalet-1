@@ -1,0 +1,228 @@
+name: OpenCamp Autograding
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - "README.md"
+      - "docs/**"
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  TZ: Asia/Shanghai
+
+jobs:
+  autograde:
+    name: Autograding
+    runs-on: ubuntu-latest
+    outputs:
+      total_exercises: ${{ steps.collect.outputs.total_exercises }}
+      passed_exercises: ${{ steps.collect.outputs.passed_exercises }}
+      total_score: ${{ steps.collect.outputs.total_score }}
+      max_score: ${{ steps.collect.outputs.max_score }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Prepare grading output directory
+        run: mkdir -p .github/result
+
+      - name: Run tests
+        id: run-tests
+        continue-on-error: true
+        run: cargo test --test cicv --verbose
+
+      - name: Ensure grading output exists
+        shell: bash
+        run: |
+          if [ -f .github/result/check_result.json ]; then
+            exit 0
+          fi
+
+          echo "Rust autograding did not produce .github/result/check_result.json." >> "$GITHUB_STEP_SUMMARY"
+          echo "This usually means the grading command failed before scores could be collected." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: Run autograding parser
+        id: autograding
+        uses: yfblock/os-autograding@master
+        with:
+          outputFile: .github/result/check_result.json
+
+      - name: Collect grading summary
+        id: collect
+        shell: bash
+        run: |
+          outfile=".github/result/check_result.json"
+
+          total_exercises=$(jq -r '.statistics.total_exercations' "$outfile")
+          passed_exercises=$(jq -r '.statistics.total_succeeds' "$outfile")
+
+          echo "total_exercises=$total_exercises" >> "$GITHUB_OUTPUT"
+          echo "passed_exercises=$passed_exercises" >> "$GITHUB_OUTPUT"
+          echo "total_score=$passed_exercises" >> "$GITHUB_OUTPUT"
+          echo "max_score=$total_exercises" >> "$GITHUB_OUTPUT"
+
+      - name: Upload grading result
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-autograding-result
+          path: .github/result/check_result.json
+          if-no-files-found: error
+
+      - name: Show grading summary
+        shell: bash
+        run: |
+          {
+            echo "## Autograding Summary"
+            echo
+            echo "- Score: ${{ steps.collect.outputs.passed_exercises }}/${{ steps.collect.outputs.total_exercises }}"
+            echo "- Passed Exercises: ${{ steps.collect.outputs.passed_exercises }}/${{ steps.collect.outputs.total_exercises }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  report-opencamp-rust:
+    name: Report Score To OpenCamp Rust
+    runs-on: ubuntu-latest
+    needs: autograde
+    if: always() && github.event_name != 'pull_request'
+    outputs:
+      status: ${{ steps.finalize.outputs.status }}
+    steps:
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Explain autograde failure
+        if: needs.autograde.result != 'success'
+        run: |
+          echo "OpenCamp Rust reporting skipped because the autograde job did not complete successfully." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check token availability
+        id: rust-token
+        if: needs.autograde.result == 'success'
+        env:
+          OPENCAMP_TOKEN: ${{ secrets.QEMU_CAMP_2026_RUST_AUTUMN_TOKEN }}
+          OPENCAMP_API_URL: ${{ secrets.QEMU_CAMP_2026_COURSE_POST_API }}
+          OPENCAMP_COURSE_ID: ${{ secrets.QEMU_CAMP_2026_RUST_AUTUMN_COURSE_ID }}
+        run: |
+          if [ -z "$OPENCAMP_TOKEN" ] || [ -z "$OPENCAMP_API_URL" ] || [ -z "$OPENCAMP_COURSE_ID" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mark skipped when reporting secrets are missing
+        if: needs.autograde.result == 'success' && steps.rust-token.outputs.enabled != 'true'
+        run: echo "OpenCamp Rust reporting skipped because QEMU_CAMP_2026_COURSE_POST_API, QEMU_CAMP_2026_RUST_AUTUMN_TOKEN, or QEMU_CAMP_2026_RUST_AUTUMN_COURSE_ID is not configured." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Send score to OpenCamp Rust
+        id: report-rust
+        if: needs.autograde.result == 'success' && steps.rust-token.outputs.enabled == 'true'
+        env:
+          OPENCAMP_API_URL: ${{ secrets.QEMU_CAMP_2026_COURSE_POST_API }}
+          OPENCAMP_TOKEN: ${{ secrets.QEMU_CAMP_2026_RUST_AUTUMN_TOKEN }}
+          OPENCAMP_COURSE_ID: ${{ secrets.QEMU_CAMP_2026_RUST_AUTUMN_COURSE_ID }}
+          GITHUB_USER: ${{ github.actor }}
+          TOTAL_SCORE: ${{ needs.autograde.outputs.total_score }}
+          MAX_SCORE: ${{ needs.autograde.outputs.max_score }}
+          SUMMARY: build/summary.json
+        run: |
+          mkdir -p "$(dirname "$SUMMARY")"
+          jq -n \
+            --arg channel "github" \
+            --argjson courseId "$OPENCAMP_COURSE_ID" \
+            --arg ext "{}" \
+            --arg name "$GITHUB_USER" \
+            --argjson score "$TOTAL_SCORE" \
+            --argjson totalScore "$MAX_SCORE" \
+            '{channel: $channel, courseId: $courseId, ext: $ext, name: $name, score: $score, totalScore: $totalScore}' > "$SUMMARY"
+
+          cat "$SUMMARY"
+
+          curl --fail-with-body -X POST "$OPENCAMP_API_URL" \
+            -H "accept: application/json;charset=utf-8" \
+            -H "Content-Type: application/json" \
+            -H "token: $OPENCAMP_TOKEN" \
+            -d @"$SUMMARY" \
+            -v
+
+      - name: Finalize report status
+        id: finalize
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ needs.autograde.result }}" != "success" ]; then
+            echo "status=autograde_failed" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ steps.rust-token.outcome }}" = "failure" ] || [ "${{ steps.rust-token.outcome }}" = "cancelled" ]; then
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ steps.rust-token.outputs.enabled }}" != "true" ]; then
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ steps.report-rust.outcome }}" = "success" ]; then
+            echo "status=reported" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "status=failed" >> "$GITHUB_OUTPUT"
+          exit 0
+
+  report-configuration:
+    name: Configuration Help
+    runs-on: ubuntu-latest
+    needs:
+      - autograde
+      - report-opencamp-rust
+    if: always() && github.event_name != 'pull_request'
+    steps:
+      - name: Show reporting summary
+        shell: bash
+        run: |
+          autograde_result='${{ needs.autograde.result }}'
+          rust_status='${{ needs.report-opencamp-rust.outputs.status }}'
+          total_score='${{ needs.autograde.outputs.total_score }}'
+          max_score='${{ needs.autograde.outputs.max_score }}'
+          passed_exercises='${{ needs.autograde.outputs.passed_exercises }}'
+          total_exercises='${{ needs.autograde.outputs.total_exercises }}'
+
+          [ -n "$autograde_result" ] || autograde_result="unknown"
+
+          if [ -z "$rust_status" ]; then
+            if [ "$autograde_result" != "success" ]; then
+              rust_status="autograde_failed"
+            else
+              rust_status="skipped"
+            fi
+          fi
+
+          {
+            echo "## OpenCamp Reporting Status"
+            echo
+            echo "- Autograde Job: ${autograde_result}"
+            echo "- Score: ${total_score}/${max_score}"
+            echo "- Passed Exercises: ${passed_exercises}/${total_exercises}"
+            echo "- OpenCamp Rust: ${rust_status}"
+          } >> "$GITHUB_STEP_SUMMARY"
