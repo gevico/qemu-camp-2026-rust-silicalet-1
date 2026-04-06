@@ -1,8 +1,9 @@
-# 字符串
+# Strings
 
-Rust 的字符串比普通字符串字面量更灵活，也更严格。  
-这一章会练习 `String`、切片、拼接和常见字符串操作。
+Rust has two string types, a string slice (`&str`) and an owned string (`String`).
+We're not going to dictate when you should use which one, but we'll show you how
+to identify and create them, as well as use them.
 
-## 进一步了解
+## Further information
 
 - [Strings](https://doc.rust-lang.org/book/ch08-02-strings.html)

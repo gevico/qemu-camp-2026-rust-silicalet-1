@@ -1,8 +1,8 @@
-# 函数
+# Functions
 
-函数是 Rust 里最基础的代码组织方式之一。  
-这一章会练习函数定义、参数、返回值和表达式写法。
+Here, you'll learn how to write functions and how the Rust compiler can help you debug errors even
+in more complex code.
 
-## 进一步了解
+## Further information
 
-- [How Functions Work](https://doc.rust-lang.org/book/ch03-03-functions.html)
+- [How Functions Work](https://doc.rust-lang.org/book/ch03-03-how-functions-work.html)

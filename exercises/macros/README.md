@@ -1,8 +1,14 @@
-# 宏
+# Macros
 
-宏可以生成代码，或者把重复的模式抽象出来。  
-这一章会练习 `macro_rules!` 的基础使用。
+Rust's macro system is very powerful, but also kind of difficult to wrap your
+head around. We're not going to teach you how to write your own fully-featured
+macros. Instead, we'll show you how to use and create them.
 
-## 进一步了解
+If you'd like to learn more about writing your own macros, the
+[macrokata](https://github.com/tfpk/macrokata) project has a similar style
+of exercises to Rustlings, but is all about learning to write Macros.
+
+## Further information
 
 - [Macros](https://doc.rust-lang.org/book/ch19-06-macros.html)
+- [The Little Book of Rust Macros](https://veykril.github.io/tlborm/)

@@ -1,8 +1,9 @@
-# 线程
+# Threads
 
-线程可以让代码并发执行。  
-这一章会练习线程创建、消息传递和共享状态。
+In most current operating systems, an executed program’s code is run in a process, and the operating system manages multiple processes at once.
+Within your program, you can also have independent parts that run simultaneously. The features that run these independent parts are called threads.
 
-## 进一步了解
+## Further information
 
+- [Dining Philosophers example](https://doc.rust-lang.org/1.4.0/book/dining-philosophers.html)
 - [Using Threads to Run Code Simultaneously](https://doc.rust-lang.org/book/ch16-01-threads.html)

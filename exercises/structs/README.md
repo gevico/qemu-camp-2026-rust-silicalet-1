@@ -1,9 +1,8 @@
-# 结构体
+# Structs
 
-结构体可以把相关的数据组合成自己的类型。  
-这一章会练习结构体定义、实例化和方法实现。
+Rust has three struct types: a classic C struct, a tuple struct, and a unit struct.
 
-## 进一步了解
+## Further information
 
-- [Defining and Instantiating Structs](https://doc.rust-lang.org/book/ch05-01-defining-structs.html)
+- [Structures](https://doc.rust-lang.org/book/ch05-01-defining-structs.html)
 - [Method Syntax](https://doc.rust-lang.org/book/ch05-03-method-syntax.html)

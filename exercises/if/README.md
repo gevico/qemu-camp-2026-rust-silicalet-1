@@ -1,8 +1,7 @@
-# 条件表达式
+# If
 
-Rust 的 `if` 是表达式，不只是控制流程。  
-这意味着不同分支可以返回值，但各分支的类型必须一致。
+`if`, the most basic (but still surprisingly versatile!) type of control flow, is what you'll learn here.
 
-## 进一步了解
+## Further information
 
 - [Control Flow - if expressions](https://doc.rust-lang.org/book/ch03-05-control-flow.html#if-expressions)

@@ -1,8 +1,8 @@
-# 入门
+# Intro
 
-这一章是 Rustlings 的起始引导。  
-如果你刚开始接触 Rust，可以先通过这里熟悉题目格式和练习方式。
+Rust uses the `print!` and `println!` macros to print text to the console.
 
-## 进一步了解
+## Further information
 
-- [Rustlings](https://github.com/rust-lang/rustlings)
+- [Hello World](https://doc.rust-lang.org/rust-by-example/hello.html)
+- [Formatted print](https://doc.rust-lang.org/rust-by-example/hello/print.html)

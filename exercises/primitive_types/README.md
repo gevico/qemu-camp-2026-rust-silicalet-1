@@ -1,7 +1,9 @@
-# 基础数据类型
+# Primitive Types
 
-这一章会练习 Rust 的基础数据类型，比如整数、浮点数、布尔值、字符、元组、数组和切片。
+Rust has a couple of basic types that are directly implemented into the
+compiler. In this section, we'll go through the most important ones.
 
-## 进一步了解
+## Further information
 
-- [Data Types](https://doc.rust-lang.org/book/ch03-02-data-types.html)
+- [Data Types](https://doc.rust-lang.org/stable/book/ch03-02-data-types.html)
+- [The Slice Type](https://doc.rust-lang.org/stable/book/ch04-03-slices.html)

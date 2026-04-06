@@ -1,8 +1,10 @@
 # Clippy
 
-Clippy 是 Rust 的静态检查工具，用来提示常见代码问题和可改进点。  
-这一章会练习根据 lint 提示调整代码风格和写法。
+The Clippy tool is a collection of lints to analyze your code so you can catch common mistakes and improve your Rust code.
 
-## 进一步了解
+If you used the installation script for Rustlings, Clippy should be already installed.
+If not you can install it manually via `rustup component add clippy`.
 
-- [Clippy](https://github.com/rust-lang/rust-clippy)
+## Further information
+
+- [GitHub Repository](https://github.com/rust-lang/rust-clippy).

@@ -1,5 +1,7 @@
 // iterators4.rs
-// Execute `rustlings hint iterators4` or use the `hint` watch subcommand for a hint.
+//
+// Execute `rustlings hint iterators4` or use the `hint` watch subcommand for a
+// hint.
 
 // I AM NOT DONE
 
@@ -13,6 +15,7 @@ pub fn factorial(num: u64) -> u64 {
     // For an extra challenge, don't use:
     // - recursion
     // Execute `rustlings hint iterators4` for hints.
+    (1..=num).product()
 }
 
 #[cfg(test)]

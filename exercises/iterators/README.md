@@ -1,8 +1,8 @@
-# 迭代器
+# Iterators
 
-迭代器可以按顺序处理一系列数据。  
-这一章会练习 `iter`、`iter_mut`、`into_iter` 和常见的链式处理方式。
+This section will teach you about Iterators.
 
-## 进一步了解
+## Further information
 
-- [Iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html)
+- [Iterator](https://doc.rust-lang.org/book/ch13-02-iterators.html)
+- [Iterator documentation](https://doc.rust-lang.org/stable/std/iter/)
